@@ -1,0 +1,56 @@
+name: Build VLC AppImage
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: archlinux-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo pacman -Syu --noconfirm
+          sudo pacman -S --needed base-devel git wget
+
+      - name: Clone AUR vlc-git PKGBUILD
+        run: |
+          git clone https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=vlc-git
+          cd vlc-git
+          makepkg -si --noconfirm
+
+      - name: Install VLC
+        run: |
+          cd vlc-git
+          sudo pacman -U vlc-git-*.pkg.tar.zst --noconfirm
+
+      - name: Prepare AppDir for AppImage
+        run: |
+          mkdir -p AppDir/usr
+          cp -r /usr/bin/vlc AppDir/usr/bin/
+          cp -r /usr/share/applications/vlc.desktop AppDir/usr/share/applications/
+          cp -r /usr/share/icons/hicolor/128x128/apps/vlc.png AppDir/usr/share/icons/hicolor/128x128/apps/
+
+      - name: Download linuxdeploy and AppImage plugin
+        run: |
+          wget -c https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          chmod +x linuxdeploy-x86_64.AppImage
+
+      - name: Create AppImage
+        run: |
+          ./linuxdeploy-x86_64.AppImage --appdir AppDir \
+            -d AppDir/usr/share/applications/vlc.desktop \
+            -i AppDir/usr/share/icons/hicolor/128x128/apps/vlc.png \
+            --output appimage
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vlc-appimage
+          path: ./*.AppImage
