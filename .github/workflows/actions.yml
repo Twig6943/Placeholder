@@ -52,6 +52,8 @@ jobs:
         run: |
           cd vlc
           mkdir build && cd build
+          export LUA_CFLAGS="$(pkg-config --cflags lua5.3)"
+          export LUA_LIBS="$(pkg-config --libs lua5.3)"
           ../configure --prefix=/usr \
             --enable-alsa \
             --enable-aribb25 \
