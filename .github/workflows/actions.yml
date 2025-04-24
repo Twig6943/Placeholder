@@ -37,6 +37,7 @@ jobs:
             libpng-dev libpulse-dev librsvg2-dev libsamplerate-dev \
             libshout3-dev libsoxr-dev libssh2-1-dev libtheora-dev \
             libtwolame-dev libvorbis-dev libvpx-dev \
+            libraw1394-dev libavc1394-dev \
             libxkbcommon-dev lirc libvdpau-dev libx264-dev libx265-dev \
             mpg123 libprojectm-dev libzvbi-dev \
             qtbase5-dev-tools desktop-file-utils
