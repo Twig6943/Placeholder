@@ -1,0 +1,105 @@
+# appimage-builder configuration for vlc-git
+version: 4.0.0.r33184.g82e5f6c
+app: vlc
+
+# Define the source: Git-based project
+source:
+  type: git
+  url: https://code.videolan.org/videolan/vlc.git
+
+  # Optional: you can lock this to a commit or tag
+  # commit: 82e5f6c
+
+build:
+  dependencies:
+    runtime:
+      - aribb24
+      - chromaprint
+      - faad2
+      - ffmpeg
+      - fontconfig
+      - freetype2
+      - fribidi
+      - gnutls
+      - harfbuzz
+      - libarchive
+      - libdvbpsi
+      - libebur128
+      - libidn
+      - libmad
+      - libmatroska
+      - libmpcdec
+      - libplacebo
+      - libsecret
+      - libupnp
+      - libxinerama
+      - libxml2
+      - libxpm
+      - lua
+      - qt6-base
+      - qt6-declarative
+      - qt6-svg
+      - rnnoise
+      - taglib
+      - xcb-util-keysyms
+
+    build:
+      - git
+      - qt6-shadertools
+      - qt6-tools
+      - wayland-protocols
+      - autoconf
+      - automake
+      - libtool
+      - pkgconf
+      - make
+      - gcc
+      - gcc-libs
+      - patch
+
+  script:
+    - ./bootstrap
+    - autoreconf -vf
+    - sed -e 's:truetype/ttf-dejavu:TTF:g' -i modules/visualization/projectm.cpp
+    - sed -e 's|-Werror-implicit-function-declaration||g' \
+          -e 's|whoami|echo builduser|g' \
+          -e 's|hostname -f|echo arch|g' -i configure
+    - export CFLAGS+=" -I/usr/include/samba-4.0 -ffat-lto-objects"
+    - export CPPFLAGS+=" -I/usr/include/samba-4.0"
+    - export CXXFLAGS="${CXXFLAGS/-Wp,-D_GLIBCXX_ASSERTIONS/} -std=c++17"
+    - export RCC=/usr/lib/qt6/rcc
+    - export QMAKE=/usr/bin/qmake6
+    - export QTPATHS6="/usr/lib/qt6/bin/qtpaths6"
+    - ./configure --prefix=/usr --sysconfdir=/etc --libexecdir=/usr/lib \
+      --with-kde-solid=/usr/share/solid/actions/ \
+      --enable-alsa --enable-avcodec --enable-qt --enable-pulse --enable-skins2 \
+      --enable-vorbis --enable-vpx --enable-wayland --enable-zvbi \
+      --enable-dvbpsi --enable-dvdread --enable-dvdnav --enable-mad
+    - make -j$(nproc)
+    - make install DESTDIR=$APPDIR
+
+AppDir:
+  path: ./AppDir
+  app_info:
+    id: org.videolan.VLC
+    name: VLC
+    icon: vlc
+    version: 4.0.0
+    exec: usr/bin/vlc
+    exec_args: $@
+
+  runtime:
+    env:
+      QT_QPA_PLATFORM: "wayland;xcb"
+      QT_PLUGIN_PATH: "$APPDIR/usr/lib/qt/plugins"
+
+  after_bundle:
+    - for res in 16 32 48 128 256; do
+        mkdir -p "$APPDIR/usr/share/icons/hicolor/${res}x${res}/apps";
+        cp vlc/share/icons/${res}x${res}/vlc.png "$APPDIR/usr/share/icons/hicolor/${res}x${res}/apps/vlc.png";
+      done
+
+AppImage:
+  arch: x86_64
+  update-information: "gh-releases-zsync|videolan|vlc|latest|*x86_64.AppImage.zsync"
+  sign-key: null
