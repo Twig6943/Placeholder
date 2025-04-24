@@ -32,13 +32,13 @@ jobs:
             libaom-dev libdav1d-dev libjack-jackd2-dev \
             libbluray-dev libcaca-dev libdc1394-dev \
             libdvdnav-dev libdvdread-dev libgme-dev \
-            libgoom2-dev libjpeg-dev libkate-dev libass-dev \
+            libjpeg-dev libkate-dev libass-dev \
             libmodplug-dev libmtp-dev libnfs-dev libogg-dev \
             libpng-dev libpulse-dev librsvg2-dev libsamplerate-dev \
             libshout3-dev libsoxr-dev libssh2-1-dev libtheora-dev \
-            libtiger-dev libtwolame-dev libvorbis-dev libvpx-dev \
+            libtwolame-dev libvorbis-dev libvpx-dev \
             libxkbcommon-dev lirc libvdpau-dev libx264-dev libx265-dev \
-            live555-dev mpg123 libprojectm-dev libzvbi-dev \
+            mpg123 libprojectm-dev libzvbi-dev \
             qtbase5-dev-tools desktop-file-utils
 
       - name: Clone VLC
@@ -95,7 +95,6 @@ jobs:
             --enable-libva \
             --enable-libxml2 \
             --enable-lirc \
-            --enable-live555 \
             --enable-mad \
             --enable-matroska \
             --enable-microdns \
@@ -135,7 +134,6 @@ jobs:
             --enable-svg \
             --enable-svgdec \
             --enable-taglib \
-            --enable-tiger \
             --enable-twolame \
             --disable-update-check \
             --enable-upnp \
