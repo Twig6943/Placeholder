@@ -1,105 +1,173 @@
-# appimage-builder configuration for vlc-git
-version: 4.0.0.r33184.g82e5f6c
-app: vlc
+name: Build VLC AppImage
 
-# Define the source: Git-based project
-source:
-  type: git
-  url: https://code.videolan.org/videolan/vlc.git
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
 
-  # Optional: you can lock this to a commit or tag
-  # commit: 82e5f6c
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-build:
-  dependencies:
-    runtime:
-      - aribb24
-      - chromaprint
-      - faad2
-      - ffmpeg
-      - fontconfig
-      - freetype2
-      - fribidi
-      - gnutls
-      - harfbuzz
-      - libarchive
-      - libdvbpsi
-      - libebur128
-      - libidn
-      - libmad
-      - libmatroska
-      - libmpcdec
-      - libplacebo
-      - libsecret
-      - libupnp
-      - libxinerama
-      - libxml2
-      - libxpm
-      - lua
-      - qt6-base
-      - qt6-declarative
-      - qt6-svg
-      - rnnoise
-      - taglib
-      - xcb-util-keysyms
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
 
-    build:
-      - git
-      - qt6-shadertools
-      - qt6-tools
-      - wayland-protocols
-      - autoconf
-      - automake
-      - libtool
-      - pkgconf
-      - make
-      - gcc
-      - gcc-libs
-      - patch
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y \
+            autoconf automake cmake build-essential \
+            libtool libtool-bin pkg-config git \
+            libfreetype6-dev libfribidi-dev libharfbuzz-dev \
+            qt6-base-dev qt6-declarative-dev qt6-svg-dev \
+            qt6-tools-dev qt6-shadertools-dev qt6-base-dev-tools \
+            libxcb-keysyms1-dev libxinerama-dev libxpm-dev \
+            libgnutls28-dev libarchive-dev libxml2-dev libdvbpsi-dev \
+            libfaad-dev libchromaprint-dev libebur128-dev \
+            libmad0-dev libmatroska-dev libmpcdec-dev libplacebo-dev \
+            libsecret-1-dev libupnp-dev lua5.3 liblua5.3-dev \
+            libavcodec-dev libavformat-dev libavutil-dev \
+            libaom-dev libdav1d-dev libjack-jackd2-dev \
+            libbluray-dev libcaca-dev libdc1394-dev \
+            libdvdnav-dev libdvdread-dev libgme-dev \
+            libgoom2-dev libjpeg-dev libkate-dev libass-dev \
+            libmodplug-dev libmtp-dev libnfs-dev libogg-dev \
+            libpng-dev libpulse-dev librsvg2-dev libsamplerate-dev \
+            libshout3-dev libsoxr-dev libssh2-1-dev libtheora-dev \
+            libtiger-dev libtwolame-dev libvorbis-dev libvpx-dev \
+            libxkbcommon-dev lirc libvdpau-dev libx264-dev libx265-dev \
+            live555-dev mpg123 libprojectm-dev libzvbi-dev \
+            qtbase5-dev-tools desktop-file-utils
 
-  script:
-    - ./bootstrap
-    - autoreconf -vf
-    - sed -e 's:truetype/ttf-dejavu:TTF:g' -i modules/visualization/projectm.cpp
-    - sed -e 's|-Werror-implicit-function-declaration||g' \
-          -e 's|whoami|echo builduser|g' \
-          -e 's|hostname -f|echo arch|g' -i configure
-    - export CFLAGS+=" -I/usr/include/samba-4.0 -ffat-lto-objects"
-    - export CPPFLAGS+=" -I/usr/include/samba-4.0"
-    - export CXXFLAGS="${CXXFLAGS/-Wp,-D_GLIBCXX_ASSERTIONS/} -std=c++17"
-    - export RCC=/usr/lib/qt6/rcc
-    - export QMAKE=/usr/bin/qmake6
-    - export QTPATHS6="/usr/lib/qt6/bin/qtpaths6"
-    - ./configure --prefix=/usr --sysconfdir=/etc --libexecdir=/usr/lib \
-      --with-kde-solid=/usr/share/solid/actions/ \
-      --enable-alsa --enable-avcodec --enable-qt --enable-pulse --enable-skins2 \
-      --enable-vorbis --enable-vpx --enable-wayland --enable-zvbi \
-      --enable-dvbpsi --enable-dvdread --enable-dvdnav --enable-mad
-    - make -j$(nproc)
-    - make install DESTDIR=$APPDIR
+      - name: Clone VLC
+        run: |
+          git clone --depth=1 https://code.videolan.org/videolan/vlc.git
+          cd vlc
+          ./bootstrap
+          autoreconf -vf
 
-AppDir:
-  path: ./AppDir
-  app_info:
-    id: org.videolan.VLC
-    name: VLC
-    icon: vlc
-    version: 4.0.0
-    exec: usr/bin/vlc
-    exec_args: $@
+      - name: Configure and Build VLC
+        run: |
+          cd vlc
+          mkdir build && cd build
+          ../configure --prefix=/usr \
+            --enable-alsa \
+            --enable-aribb25 \
+            --enable-aom \
+            --enable-archive \
+            --enable-aribsub \
+            --enable-avahi \
+            --enable-avcodec \
+            --enable-avformat \
+            --enable-bluray \
+            --enable-caca \
+            --enable-chromaprint \
+            --enable-chromecast \
+            --enable-dav1d \
+            --enable-dc1394 \
+            --disable-decklink \
+            --enable-dv1394 \
+            --enable-dvbpsi \
+            --enable-dvdnav \
+            --enable-dvdread \
+            --enable-ebur128 \
+            --enable-faad \
+            --disable-fdkaac \
+            --enable-flac \
+            --disable-fluidsynth \
+            --enable-fontconfig \
+            --enable-freetype \
+            --enable-fribidi \
+            --enable-gme \
+            --enable-gnutls \
+            --enable-goom \
+            --enable-gst-decode \
+            --enable-harfbuzz \
+            --enable-jack \
+            --enable-jpeg \
+            --enable-kate \
+            --enable-kwallet \
+            --enable-libass \
+            --disable-libgcrypt \
+            --enable-libplacebo \
+            --enable-libva \
+            --enable-libxml2 \
+            --enable-lirc \
+            --enable-live555 \
+            --enable-mad \
+            --enable-matroska \
+            --enable-microdns \
+            --enable-mod \
+            --enable-mpc \
+            --enable-mpg123 \
+            --enable-mtp \
+            --enable-ncurses \
+            --enable-nfs \
+            --enable-nls \
+            --enable-notify \
+            --enable-ogg \
+            --enable-oggspots \
+            --disable-opencv \
+            --enable-opus \
+            --enable-png \
+            --enable-postproc \
+            --enable-projectm \
+            --enable-pulse \
+            --enable-qt \
+            --enable-qtdeclarative \
+            --enable-qtshadertools \
+            --enable-qtsvg \
+            --enable-qtwayland \
+            --disable-rist \
+            --disable-rpath \
+            --enable-samplerate \
+            --disable-schroedinger \
+            --enable-secret \
+            --enable-sftp \
+            --enable-shout \
+            --enable-skins2 \
+            --enable-smbclient \
+            --enable-soxr \
+            --enable-speex \
+            --enable-srt \
+            --enable-svg \
+            --enable-svgdec \
+            --enable-taglib \
+            --enable-tiger \
+            --enable-twolame \
+            --disable-update-check \
+            --enable-upnp \
+            --enable-vcd \
+            --enable-vdpau \
+            --enable-vlc \
+            --enable-vorbis \
+            --enable-vpx \
+            --enable-wayland \
+            --enable-x264 \
+            --enable-x265 \
+            --enable-zvbi
+          make -j$(nproc)
 
-  runtime:
-    env:
-      QT_QPA_PLATFORM: "wayland;xcb"
-      QT_PLUGIN_PATH: "$APPDIR/usr/lib/qt/plugins"
+      - name: Install into AppDir
+        run: |
+          cd vlc/build
+          make DESTDIR=$GITHUB_WORKSPACE/AppDir install
+          cp ../vlc.desktop $GITHUB_WORKSPACE/AppDir/usr/share/applications/
+          cp ../share/icons/128x128/vlc.png $GITHUB_WORKSPACE/AppDir/usr/share/icons/hicolor/128x128/apps/vlc.png
 
-  after_bundle:
-    - for res in 16 32 48 128 256; do
-        mkdir -p "$APPDIR/usr/share/icons/hicolor/${res}x${res}/apps";
-        cp vlc/share/icons/${res}x${res}/vlc.png "$APPDIR/usr/share/icons/hicolor/${res}x${res}/apps/vlc.png";
-      done
+      - name: Download linuxdeploy and AppImage plugin
+        run: |
+          wget -c https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          chmod +x linuxdeploy-x86_64.AppImage
+          ./linuxdeploy-x86_64.AppImage --appdir AppDir \
+            -d AppDir/usr/share/applications/vlc.desktop \
+            -i AppDir/usr/share/icons/hicolor/128x128/apps/vlc.png \
+            --output appimage
 
-AppImage:
-  arch: x86_64
-  update-information: "gh-releases-zsync|videolan|vlc|latest|*x86_64.AppImage.zsync"
-  sign-key: null
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: vlc-appimage
+          path: ./*.AppImage
