@@ -19,15 +19,15 @@ jobs:
           sudo pacman -Syu --noconfirm
           sudo pacman -S --needed base-devel git wget
 
-      - name: Clone AUR vlc-git PKGBUILD
+      - name: Download PKGBUILD
         run: |
-          git clone https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=vlc-git
+          mkdir vlc-git
           cd vlc-git
+          wget  https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=vlc-git
           makepkg -si --noconfirm
 
       - name: Install VLC
         run: |
-          cd vlc-git
           sudo pacman -U vlc-git-*.pkg.tar.zst --noconfirm
 
       - name: Prepare AppDir for AppImage
